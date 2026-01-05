@@ -1,11 +1,11 @@
-﻿<#
+<#
 .DESCRIPTION
     Description: This script is used to create 'issues' for the students depending on the course (SC-OTC-002 and STC-002), such as altering the SC admin password, altering the Server Admin password,
                  disabling the default SQL NT AUTHORITY\SYSTEM user, putting a DB into 'Single User Mode', etc.
 
     @Author: James Savage
 
-    Last Updated : 21-08-2023
+    Last Updated : 05-01-2026
 #>
 
 Param(
@@ -79,25 +79,25 @@ function STC002_GenUse_ServerIssues {
             $serverAdmin_Password_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\GenetecServer.gconfig"
             $serverAdmin_Directory_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\Directory.gconfig"
 
-            # GenetecServer.gconfig -------------------
+            # GenetecServer.gconfig ---------------
             $xmlContent_GS = Get-Content -Path $serverAdmin_Password_TargetPath -Raw
             $xmlDocument_GS = [xml]::new()
             $xmlDocument_GS.LoadXml($xmlContent_GS)
 
             # Note:
-            # Server Admin Hash for password '!Training1'     == 'WXjYl6TBmu55qCIK4fzxHg=='
-            # Server Admin Hash for password 'Letmein123!'    == '07bFkgS3wJphoIl+ihbdNA=='
+            # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+            # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
 
-            $newPasswordValue = '07bFkgS3wJphoIl+ihbdNA=='  # Replace with the new password
+            $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'  # Replace with the new password
 
             # Update password in 'genetecServer'
-            $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/password")
-            $genetecServerPasswordNode.SetAttribute("password", $newPasswordValue)
+            $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+            $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
             $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
             # Update password in 'console'
-            $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/password")
-            $consolePasswordNode.SetAttribute("password", $newPasswordValue)
+            $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+            $consolePasswordNode.SetAttribute("value", $newPasswordValue)
             $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
             Write-Host "$Server`: Server Admin - Password altered from `"!Training1`" to `"Letmin123!`""
@@ -482,19 +482,19 @@ function OTC002_GenUse_Day1_ServerIssues {
                 $xmlDocument_GS.LoadXml($xmlContent_GS)
 
                 # Note:
-                # Server Admin Hash for password '!Training1'     == 'WXjYl6TBmu55qCIK4fzxHg=='
-                # Server Admin Hash for password 'Letmein123!'    == '07bFkgS3wJphoIl+ihbdNA=='
+                # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+                # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
 
-                $newPasswordValue = '07bFkgS3wJphoIl+ihbdNA=='  # Replace with the new password
+                $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'  # Replace with the new password
 
                 # Update password in 'genetecServer'
-                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/password")
-                $genetecServerPasswordNode.SetAttribute("password", $newPasswordValue)
+                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+                $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 # Update password in 'console'
-                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/password")
-                $consolePasswordNode.SetAttribute("password", $newPasswordValue)
+                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+                $consolePasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 Write-Host "$Server`: Server Admin - Password altered from `"!Training1`" to `"Letmin123!`""
@@ -716,7 +716,9 @@ function OTC002_GenUse_Day3_ServerIssues {
             param ($Server)
                 
                 ##### STEP 1 - At this point I have no idea what the students will have there passwords for Server Admin and SC admin user set to, so alter them both to !Training1 ------------
-                
+                             
+                ##### Change the Server Admin password --------------
+
                 # Specifying the path to the "Genetec Security Center" install in program Files (x86)
                 $BasePath = "C:\Program Files (x86)"
 
@@ -726,30 +728,30 @@ function OTC002_GenUse_Day3_ServerIssues {
                 # Combine the base path and the latest version to get the full target path 
                 $serverAdmin_Password_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\GenetecServer.gconfig"
 
-                # GenetecServer.gconfig --------------
+                # GenetecServer.gconfig ---------------
                 $xmlContent_GS = Get-Content -Path $serverAdmin_Password_TargetPath -Raw
                 $xmlDocument_GS = [xml]::new()
                 $xmlDocument_GS.LoadXml($xmlContent_GS)
 
                 # Note:
-                # Server Admin Hash for password '!Training1'     == 'WXjYl6TBmu55qCIK4fzxHg=='
-                # Server Admin Hash for password 'Letmein123!'    == '07bFkgS3wJphoIl+ihbdNA=='
+                # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+                # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
 
-                $newPasswordValue = 'WXjYl6TBmu55qCIK4fzxHg=='  # Replace with the new password
+                $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'  # Replace with the new password
 
                 # Update password in 'genetecServer'
-                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/password")
-                $genetecServerPasswordNode.SetAttribute("password", $newPasswordValue)
+                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+                $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 # Update password in 'console'
-                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/password")
-                $consolePasswordNode.SetAttribute("password", $newPasswordValue)
+                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+                $consolePasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
-                Write-Host "$Server`: Server Admin - Password altered from `"unknown`" to `"!Training1`""               
+                Write-Host "$Server`: Server Admin - Password altered from `"Unknown`" to `"!Training1`""           
                 
-                #----------
+                ##### Change the SC Admin password --------------
 
                 # Create a new object used to establish a connection to MS SQL DB's, define connection string and open connection
                 $sqlConnection = New-Object System.Data.SqlClient.SqlConnection
@@ -869,7 +871,7 @@ function OTC002_Exam_Day1_ServerIssues {
         $Remote = Invoke-Command -Session $NewPSSession -ScriptBlock {
             param ($Server)
   
-                ##### STEP 1 - Change the Server Admin password --------
+                ##### STEP 1 - Change the Server Admin password --------------
 
                 # Specifying the path to the "Genetec Security Center" install in program Files (x86)
                 $BasePath = "C:\Program Files (x86)"
@@ -880,25 +882,25 @@ function OTC002_Exam_Day1_ServerIssues {
                 # Combine the base path and the latest version to get the full target path 
                 $serverAdmin_Password_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\GenetecServer.gconfig"
 
-                # GenetecServer.gconfig ----------
+                # GenetecServer.gconfig ---------------
                 $xmlContent_GS = Get-Content -Path $serverAdmin_Password_TargetPath -Raw
                 $xmlDocument_GS = [xml]::new()
                 $xmlDocument_GS.LoadXml($xmlContent_GS)
 
                 # Note:
-                # Server Admin Hash for password '!Training1'     == 'WXjYl6TBmu55qCIK4fzxHg=='
-                # Server Admin Hash for password 'Letmein123!'    == '07bFkgS3wJphoIl+ihbdNA=='
+                # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+                # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
 
-                $newPasswordValue = '07bFkgS3wJphoIl+ihbdNA=='  # Replace with the new password
+                $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'  # Replace with the new password
 
                 # Update password in 'genetecServer'
-                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/password")
-                $genetecServerPasswordNode.SetAttribute("password", $newPasswordValue)
+                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+                $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 # Update password in 'console'
-                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/password")
-                $consolePasswordNode.SetAttribute("password", $newPasswordValue)
+                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+                $consolePasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 Write-Host "$Server`: Server Admin - Password altered from `"!Training1`" to `"Letmin123!`""
@@ -954,7 +956,7 @@ function OTC002_Exam_Day1_ServerIssues {
         $Remote = Invoke-Command -Session $NewPSSession -ScriptBlock {
             param ($Server)
 
-                ##### STEP 1 - Change the Server Admin password ----
+                ##### STEP 1 - Change the Server Admin password --------------
 
                 # Specifying the path to the "Genetec Security Center" install in program Files (x86)
                 $BasePath = "C:\Program Files (x86)"
@@ -965,25 +967,25 @@ function OTC002_Exam_Day1_ServerIssues {
                 # Combine the base path and the latest version to get the full target path 
                 $serverAdmin_Password_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\GenetecServer.gconfig"
 
-                # GenetecServer.gconfig ----
+                # GenetecServer.gconfig ---------------
                 $xmlContent_GS = Get-Content -Path $serverAdmin_Password_TargetPath -Raw
                 $xmlDocument_GS = [xml]::new()
                 $xmlDocument_GS.LoadXml($xmlContent_GS)
 
                 # Note:
-                # Server Admin Hash for password '!Training1'     == 'WXjYl6TBmu55qCIK4fzxHg=='
-                # Server Admin Hash for password 'Letmein123!'    == '07bFkgS3wJphoIl+ihbdNA=='
+                # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+                # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
 
-                $newPasswordValue = '07bFkgS3wJphoIl+ihbdNA=='  # Replace with the new password
+                $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'  # Replace with the new password
 
                 # Update password in 'genetecServer'
-                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/password")
-                $genetecServerPasswordNode.SetAttribute("password", $newPasswordValue)
+                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+                $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 # Update password in 'console'
-                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/password")
-                $consolePasswordNode.SetAttribute("password", $newPasswordValue)
+                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+                $consolePasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 Write-Host "$Server`: Server Admin - Password altered from `"!Training1`" to `"Letmin123!`""
@@ -1089,6 +1091,8 @@ function OTC002_Exam_Day2_ServerIssues {
                 $SCsession = New-SCSession -ComputerName $Server -User "Admin" -DirectoryPassword "!Training1" -GenetecServerPassword "!Training1" | Enter-SCSession | Out-Null
                 
                 $myArc = Get-SCRoles -Type Archiver | Get-SCRole
+                
+                
                 ##### STEP 2 - Set the Archiver encryption to none ----------------------------------
                 $myArc.EncryptionType = "none" # Default is SRTP_InTransit
                 Set-SCRole $myArc
@@ -1434,6 +1438,7 @@ function OTC002_Exam_Day3_ServerIssues {
 }
 
 # This function created to ensure all New-SCSession's dont have an issue with passwords, God only knows what passwords the students will set!
+#I wrote this but don't use it... Nice.
 $passwordResetFunction = {
 ################################################################
 # FUNCTION: Set the Server Admin and Config Tool password to !Training1
@@ -1457,7 +1462,7 @@ function passwordReset {
     $vmNumber = $server -replace '.*-S(\d+)', '$1'
     $vmNumber = [int]$vmNumber
 
-    # If machine is an 'S100' delete the GenetecRedirector Firewall rule
+    # If machine is an 'S100' reset both Server Admin and SC Admin passwords
     if ($vmNumber -ge 100 -and $vmNumber -le 199) {
         # Script block to send commands to the remote machine(s)
         $Remote = Invoke-Command -Session $NewPSSession -ScriptBlock {
@@ -1474,30 +1479,30 @@ function passwordReset {
                 # Combine the base path and the latest version to get the full target path 
                 $serverAdmin_Password_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\GenetecServer.gconfig"
 
-                # GenetecServer.gconfig -----------------
+                # GenetecServer.gconfig ---------------
                 $xmlContent_GS = Get-Content -Path $serverAdmin_Password_TargetPath -Raw
                 $xmlDocument_GS = [xml]::new()
                 $xmlDocument_GS.LoadXml($xmlContent_GS)
 
                 # Note:
-                # Server Admin Hash for password '!Training1'     == 'WXjYl6TBmu55qCIK4fzxHg=='
-                # Server Admin Hash for password 'Letmein123!'    == '07bFkgS3wJphoIl+ihbdNA=='
+                # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+                # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
 
-                $newPasswordValue = 'WXjYl6TBmu55qCIK4fzxHg=='  # Replace with the new password
+                $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'  # Replace with the new password
 
                 # Update password in 'genetecServer'
-                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/password")
-                $genetecServerPasswordNode.SetAttribute("password", $newPasswordValue)
+                $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+                $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 # Update password in 'console'
-                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/password")
-                $consolePasswordNode.SetAttribute("password", $newPasswordValue)
+                $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+                $consolePasswordNode.SetAttribute("value", $newPasswordValue)
                 $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
 
                 Write-Host "$Server`: Server Admin - Password altered to !Training1"
+                
                 #---------------------
-
 
                 ##### STEP 2 - Alter the SC Admin password ------------------
                 
@@ -1532,9 +1537,42 @@ function passwordReset {
         Remove-PSSession -Session $NewPSSession
    }
    
-    # If machine is not 'S100'
+    # If machine is not 'S100' just reset Server Admin password
     else {
-       Write-Host "$Server`: For the passwordReset function, only 'S100 - Main Server' machines are altered"
+
+        ##### STEP 1 - Change the Server Admin password --------------
+
+        # Specifying the path to the "Genetec Security Center" install in program Files (x86)
+        $BasePath = "C:\Program Files (x86)"
+
+        # Find the latest version of "Genetec Security Center" in the Start Menu (this selects the most recent version)
+        $LatestVersion = Get-ChildItem -Path $BasePath | Where-Object { $_.Name -LIKE "Genetec Security Center*" } | Sort-Object Name -Descending | Select-Object -First 1
+
+        # Combine the base path and the latest version to get the full target path 
+        $serverAdmin_Password_TargetPath = $BasePath + "\" + $LatestVersion.Name + "\ConfigurationFiles\GenetecServer.gconfig"
+
+        # GenetecServer.gconfig ---------------
+        $xmlContent_GS = Get-Content -Path $serverAdmin_Password_TargetPath -Raw
+        $xmlDocument_GS = [xml]::new()
+        $xmlDocument_GS.LoadXml($xmlContent_GS)
+
+        # Note:
+        # Server Admin Hash for password '!Training1'     == 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'
+        # Server Admin Hash for password 'Letmein123!'    == 'rfc2898$ic=100000$71OmjiKyvT0=$6y6xbJlT7JNby8L1OjQPJKLgT+ooDdM1kRL9WOwafcopYDvWqEjxBrrY4HeiA90O'
+
+        $newPasswordValue = 'rfc2898$ic=100000$71OmjiKyvT0=$QOAAnrBZfxt/6GeFEWf4BqwJml4AmNwY4lIuUQUKvTNt+4o7mEMc8V9oQJtlAuBk'  # Replace with the new password
+
+        # Update password in 'genetecServer'
+        $genetecServerPasswordNode = $xmlDocument_GS.SelectSingleNode("//genetecServer/passwordHash")
+        $genetecServerPasswordNode.SetAttribute("value", $newPasswordValue)
+        $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
+
+        # Update password in 'console'
+        $consolePasswordNode = $xmlDocument_GS.SelectSingleNode("//console/passwordHash")
+        $consolePasswordNode.SetAttribute("value", $newPasswordValue)
+        $xmlDocument_GS.Save($serverAdmin_Password_TargetPath)  # Save the changes back to the file
+
+        Write-Host "$Server`: Server Admin - Password altered to !Training1 (NOTE: For the passwordReset function, only 'S100 - Main Server' SC Admin passwords are altered"
    }
 }
 }
