@@ -1,10 +1,10 @@
-﻿<#
+<#
 .DESCRIPTION
     Description: This script is used to configure the Windows Firewall settings based on the course that is to be run.
 
     @Author: James Savage
 
-    Last Updated : 21-08-2023
+    Last Updated : 05-01-2026
 #>
 
 Param(
@@ -248,32 +248,24 @@ function OTC002_Exam_Day3_Firewall {
     
                 Remove-NetFirewallRule -DisplayName $GenetecRedirector.DisplayName
                 Write-Host "$Server`: GenetecRedirector Firewall rule deleted"
-    
-        } -ArgumentList $Server
 
-        Write-Host "$Server`: OTC002_Exam_Day3_Firewall function executed (S100 Branch)"
-        Remove-PSSession -Session $NewPSSession
-   }
-   
-    # If machine is an 'S200' create an outbound block rule for TCP 5500
-    elseif ($vmNumber -ge 200 -and $vmNumber -le 250) {
-        # Script block to send commands to the remote machine(s)
-        $Remote = Invoke-Command -Session $NewPSSession -ScriptBlock {
-            param ($Server)
-  
-                # VM S200 range ==
+                # Second, delete all inbound rules related to port 5500
+                $GenetecServer =   Get-NetFirewallRule | Where-Object {$_.DisplayName -LIKE "*GenetecServer"}
+                $Port5500_TCP =    Get-NetFirewallRule | Where-Object {$_.DisplayName -LIKE "*5500 - TCP*"}
+                $Port5500_UDP =    Get-NetFirewallRule | Where-Object {$_.DisplayName -LIKE "*5500 - UDP*"}
+    
+                Remove-NetFirewallRule -DisplayName $GenetecServer.DisplayName
+                Remove-NetFirewallRule -DisplayName $Port5500_TCP.DisplayName
+                Remove-NetFirewallRule -DisplayName $Port5500_UDP.DisplayName
+                Write-Host "$Server`: GenetecServer, 5500-TCP, and 5500-UDP Firewall rules deleted"
+
                 New-NetFirewallRule -DisplayName "TCP 5500" -Direction Outbound -LocalPort 5500 -Protocol TCP -Action Block
                 Write-Host "$Server`: Outbound Firewall rule blocking TCP 5500 created"
     
         } -ArgumentList $Server
 
-        Write-Host "$Server`: OTC002_Exam_Day3_Firewall function executed (S200 Branch)"
+        Write-Host "$Server`: OTC002_Exam_Day3_Firewall function executed (S100 Branch)"
         Remove-PSSession -Session $NewPSSession
-   }
-   
-    # If machine is not 'S100' or 'S200', bail!
-    else {
-       Write-Host "Ignoring $server': VM number $vmNumber is not within the specified ranges."
    }
 }
 }
